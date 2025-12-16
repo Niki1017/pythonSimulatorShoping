@@ -3,6 +3,13 @@ import os
 
 DEFAULT_FILE = "defaultSettings.json"
 
+options = [
+    "1. отображение текущего состояния магазина",
+    "2. Список продуктов",
+    "3. баланс и репутация",
+    "0. завершение дня"
+]
+
 class Shop:
     def __init__(self, nameShop="", balance=10000, reputation=50, service=1, advertising=0):
         self.nameShop = nameShop
@@ -44,6 +51,25 @@ class Shop:
             self.nameShop = input("Ввелите название магазина: ")
             self.save()
         print(f"Импортирован магазн {self.nameShop}")
+
+        print("="*15)
+        
+        for opting in options:
+            print(opting)
+
+        option = int(input("Выберите номер действия: "))
+
+        match option:
+            case 1:
+                print("Вы выбрали действие 1")
+            case 2:
+                print("Вы выбрали действие 2")
+            case 3:
+                print("Вы выбрали действие 3")
+            case 0:
+                print("Вы выбрали действие 0")
+            case _:
+                print("Неправильно введен номер действия")
 
 if __name__ == "__main__":
     shop = Shop()
