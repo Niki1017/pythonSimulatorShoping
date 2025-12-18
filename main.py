@@ -1,6 +1,8 @@
 import json
 import os
 
+from products import data_products
+
 DEFAULT_FILE = "defaultSettings.json"
 PRODUCTS = "products.json"
 
@@ -23,10 +25,13 @@ class Shop:
         self.reputation = reputation
         self.service = service
         self.advertising = advertising
+        self.products = {}
+
 
         if os.path.exists(DEFAULT_FILE):
             self.load()
         else:
+            self.products = data_products
             self.save()
 
     def save(self):
@@ -39,30 +44,6 @@ class Shop:
             "advertising": self.advertising # уровень рекламы магазина
         }
 
-        # Данные о товарах магазина
-        data_products = {
-            "Хлеб": {
-                "our_price": 50,                 # цена товара в магазине игрока
-                "avg_market_price": 48,          # средняя рыночная цена товара
-                "avg_competitor_price": 52,      # средняя цена товара у конкурентов
-                "cost_price": 30,                # себестоимость (цена закупки товара)
-                "quantity": 30                   # количество товара на складе
-            },
-            "Молоко": {
-                "our_price": 80,                 # цена товара в магазине игрока
-                "avg_market_price": 78,          # средняя рыночная цена товара
-                "avg_competitor_price": 82,      # средняя цена товара у конкурентов
-                "cost_price": 50,                # себестоимость (цена закупки товара)
-                "quantity": 20                   # количество товара на складе
-            },
-            "Шоколад": {
-                "our_price": 120,                # цена товара в магазине игрока
-                "avg_market_price": 115,         # средняя рыночная цена товара
-                "avg_competitor_price": 125,     # средняя цена товара у конкурентов
-                "cost_price": 80,                # себестоимость (цена закупки товара)
-                "quantity": 10                   # количество товара на складе
-            }
-        }
 
         # Сохранение основных параметров магазина в файл defaultSettings.json
         with open(DEFAULT_FILE, "w", encoding="utf-8") as f:
@@ -70,7 +51,7 @@ class Shop:
 
         # Сохранение информации о товарах в файл products.json
         with open(PRODUCTS, "w", encoding="utf-8") as f:
-            json.dump(data_products, f, ensure_ascii=False, indent=4)
+            json.dump(self.products, f, ensure_ascii=False, indent=4)
 
 
     def load(self):
@@ -78,6 +59,8 @@ class Shop:
             data = json.load(f)
         with open(PRODUCTS, "r", encoding="utf-8") as fp:
             data_product = json.load(fp)
+            self.products = data_product
+
 
         self.nameShop = data.get("nameShop", "")
         self.balance = data.get("balance", 10000)
@@ -86,14 +69,56 @@ class Shop:
         self.advertising = data.get("advertising", 0)
 
     def indicator(self):
-        print("Просмотр баланса и репутации в разработке")
+        print("\nТекущее состояние магазина")
+        print(f"Баланс: {self.balance}")
+        print(f"Репутация: {self.reputation}")
+        print(f"Сервис: {self.service}")
+        print(f"Реклама: {self.advertising}")
 
     def pricing(self):
         print("Изменение цен у продуктов в разработке")
 
     def purchase(self):
-        print("Закупка товаров в разработке")
+        print("\nЗакупка товаров:\n")
 
+        products = list(self.products.keys())
+
+        for i, product in enumerate(products, start=1):
+            details = self.products[product]
+            print(f"{i}. {product} - {details['cost_price']}")
+
+        print()
+
+        try:
+            assortment = int(input("Товар: "))
+        except ValueError:
+            print("Ошибка: введите номер товара")
+            return
+
+        if 1 <= assortment <= len(products):
+            product_name = products[assortment - 1]
+            product_data = self.products[product_name]
+
+            print(
+                f"\nВы выбрали: {product_name}\n"
+                f"Цена закупки: {product_data['cost_price']}"
+            )
+
+            quantity = int(input("Количество продукта: "))
+
+            if not self.balance <= 0:
+                if product_data['cost_price'] * quantity > self.balance:
+                    print("Недосаточн денег")
+                else:
+                    self.balance -= product_data['cost_price'] * quantity
+                    print(
+                        f"\nУспешно!\n"
+                        f"Списано: {product_data['cost_price']*quantity}\n"
+                        f"Баланс: {self.balance}\n"
+                    )
+
+        else:
+            print("Ошибка: такого товара нет")
     def upgrade_service(self):
         print("Улучшение сервиса в разработке")
 
@@ -153,11 +178,11 @@ class Shop:
                 
                 case 0:
                     print("Вы завершили работу программы.")
-                    exit()
+                    break 
 
                 case _:
                     print("\nНеверный пункт меню")
-
+        print("У вас не остаось денег и вы умерли с голоду")
 
 if __name__ == "__main__":
     shop = Shop()
