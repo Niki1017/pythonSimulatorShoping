@@ -1,31 +1,35 @@
 import json
 import os
+import random
+import time
 
 from products import data_products
+from users import roles, names, rangs
 
 DEFAULT_FILE = "defaultSettings.json"
 PRODUCTS = "products.json"
 
 
 options = [
-"1 — посмотреть баланс и репутацию",
+"1 — посмотреть информацию о магазине",
 "2 — изменить цену товара",
 "3 — закупить товары",
 "4 — улучшить сервис (−500 денег, +1 сервис)",
-"5 — вложиться в рекламу (−300 денег, +1 реклама)",
+"5 — вложиться в рекламу (−300 денег)",
 "6 — завершить день",
 "0 — выход из игры"
 ]
 
 
 class Shop:
-    def __init__(self, nameShop="", balance=10000, reputation=50, service=1, advertising=0):
+    def __init__(self, nameShop="", balance=10000, reputation=50, service="Экономный", advertising=0, int_buyers=20):
         self.nameShop = nameShop
         self.balance = balance
         self.reputation = reputation
         self.service = service
         self.advertising = advertising
         self.products = {}
+        self.int_buyers = int_buyers
 
 
         if os.path.exists(DEFAULT_FILE):
@@ -40,8 +44,9 @@ class Shop:
             "nameShop": self.nameShop,      # название магазина
             "balance": self.balance,        # текущий баланс магазина
             "reputation": self.reputation,  # репутация магазина (влияет на выбор покупателей)
-            "service": self.service,        # уровень сервиса магазина
-            "advertising": self.advertising # уровень рекламы магазина
+            "service": self.service,        # уровень сервиса магазина. Всего 3 (почти не влияет, влияет умеренно, влияет сильно (0, 5, 15))
+            "advertising": self.advertising, # уровень рекламы магазина
+            "buyers": self.int_buyers
         }
 
 
@@ -67,6 +72,7 @@ class Shop:
         self.reputation = data.get("reputation", 50)
         self.service = data.get("service", 1)
         self.advertising = data.get("advertising", 0)
+        self.int_buyers = data.get("buyers", 20)
 
     def indicator(self):
         print("\nТекущее состояние магазина")
@@ -90,7 +96,7 @@ class Shop:
         print()
 
         try:
-            assortment = int(input("Товар: "))
+            assortment = int(input("№ Товара: "))
         except ValueError:
             print("Ошибка: введите номер товара")
             return
@@ -105,28 +111,90 @@ class Shop:
             )
 
             quantity = int(input("Количество продукта: "))
-
-            if not self.balance <= 0:
-                if product_data['cost_price'] * quantity > self.balance:
-                    print("Недосаточн денег")
-                else:
-                    self.balance -= product_data['cost_price'] * quantity
-                    print(
-                        f"\nУспешно!\n"
-                        f"Списано: {product_data['cost_price']*quantity}\n"
-                        f"Баланс: {self.balance}\n"
-                    )
-
+            if quantity > 0:
+                if not self.balance <= 0:
+                    if product_data['cost_price'] * quantity > self.balance:
+                        print("Недосаточно денег")
+                    else:
+                        self.balance -= product_data['cost_price'] * quantity
+                        print(
+                            f"\nУспешно!\n"
+                            f"Списано: {product_data['cost_price']*quantity}\n"
+                            f"Баланс: {self.balance}\n"
+                        )
+                        product_data['quantity'] += quantity
+                        self.save()
+            else:
+                print("Число не может быть отрицательным или равное нулю")
         else:
             print("Ошибка: такого товара нет")
     def upgrade_service(self):
         print("Улучшение сервиса в разработке")
 
     def reklama(self):
-        print("Вложеиние в рекламу в разработке")
+        # при использовании рекламы увеличивается процент людей в день.
+        # 1 реклама = int_buyers + 2
+        price_ads = 300
+        if self.balance < price_ads:
+            print("недостаточно денег на счете")
+        self.balance -= price_ads
+        self.int_buyers = self.int_buyers + 2
+        self.advertising += 1
+        print(f"вы купили рекламу\nкол-во поситителей в день: {self.int_buyers} ")
+
+        
+        return self.balance
+    
+        # print("Вложеиние в рекламу в разработке")
 
     def end_day(self):
-        print("Завершение дня в разработке")
+        buyers = ["Экономный", "Обычный", "Премиальный"] # типы покупателей
+        for i in range(self.int_buyers):
+            i = i + 1
+            buyer = random.choice(buyers)
+            # print(f"{i}. {buyer}")
+            if buyer == self.service:
+                role = random.choice(roles)
+                name = random.choice(names)
+                rang = random.choices(
+                    population=["Обычный", "Эпик", "Мифик", "Лега"],
+                    weights=[82, 14, 3, 0.5],
+                    k=1
+                )[0]
+                product = random.choice(list(self.products))
+                product_data = self.products[product]
+
+                if role == "Бухгалтер" or name == "ksuhva":
+                    role = "Бухгалтер"
+                    name = "ksuhva"
+                    rang = "Лега"
+                elif role == "Курьер" or name == "Alexkrut56":
+                    role = "Курьер"
+                    name = "Alexkrut56"
+                    rang = "Мифик"
+                elif role == "Предприниматель"  or name == "Георгий Александрович":
+                    role = "Предприниматель"
+                    name = "Георгий Александрович"
+                    rang = "Эпик"
+                print(f"{role} - {name} - {rang}")
+                
+                persent = 0
+                
+                if rang == "Обычный":
+                    persent = 0
+                elif rang == "Эпик":
+                    persent = 5
+                elif rang == "Мифик":
+                    persent = 15
+                elif rang == "Лега":
+                    persent = 30
+
+                print(f"Купил: {product} за {product_data['our_price']} рублей +{persent}%\n")
+                self.balance += product_data['our_price'] 
+                time.sleep(3)
+
+            # else:
+            #     print("error")
 
     def show_menu(self):
         print("═" * 30)
@@ -148,7 +216,6 @@ class Shop:
             if self.balance > 120000 and self.reputation > 80:
                 print("Ваш магазин популярный, вы прошли игру")
                 exit()
-
             try:
                 option = int(input("Выберите номер действия: "))
             except ValueError:
@@ -156,30 +223,22 @@ class Shop:
                 continue
             except Exception as e:
                 print(f"Error: {e}")
-
             match option:
                 case 1:
                     self.indicator()
-
                 case 2:
                     self.pricing()
-
                 case 3:
                     self.purchase()
-
                 case 4:
                     self.upgrade_service()
-
                 case 5:
                     self.reklama()
-                
                 case 6:
                     self.end_day()
-                
                 case 0:
                     print("Вы завершили работу программы.")
-                    break 
-
+                    exit()
                 case _:
                     print("\nНеверный пункт меню")
         print("У вас не остаось денег и вы умерли с голоду")

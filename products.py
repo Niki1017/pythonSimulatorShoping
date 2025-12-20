@@ -1,11 +1,11 @@
 # Данные о товарах магазина
 data_products = {
     "Хлеб": {
-        "our_price": 50,                 # цена товара в магазине игрока
-        "avg_market_price": 48,          # средняя рыночная цена товара
-        "avg_competitor_price": 52,      # средняя цена товара у конкурентов
-        "cost_price": 30,                # себестоимость (цена закупки товара)
-        "quantity": 30                   # количество товара на складе
+        "our_price": 50,
+        "avg_market_price": 48,
+        "avg_competitor_price": 52,
+        "cost_price": 30,
+        "quantity": 30
     },
     "Молоко": {
         "our_price": 80,
@@ -141,5 +141,3 @@ data_products = {
         "quantity": 28
     }
 }
-
-
