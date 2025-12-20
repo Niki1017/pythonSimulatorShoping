@@ -4,7 +4,7 @@ import random
 import time
 
 from products import data_products
-from users import roles, names, rangs
+from users import roles, names
 
 DEFAULT_FILE = "defaultSettings.json"
 PRODUCTS = "products.json"
@@ -140,6 +140,7 @@ class Shop:
         self.balance -= price_ads
         self.int_buyers = self.int_buyers + 2
         self.advertising += 1
+        self.save()
         print(f"вы купили рекламу\nкол-во поситителей в день: {self.int_buyers} ")
 
         
@@ -148,11 +149,9 @@ class Shop:
         # print("Вложеиние в рекламу в разработке")
 
     def end_day(self):
-        buyers = ["Экономный", "Обычный", "Премиальный"] # типы покупателей
+        buyers = ["Экономный", "Обычный", "Премиальный"]  # типы покупателей
         for i in range(self.int_buyers):
-            i = i + 1
             buyer = random.choice(buyers)
-            # print(f"{i}. {buyer}")
             if buyer == self.service:
                 role = random.choice(roles)
                 name = random.choice(names)
@@ -172,29 +171,33 @@ class Shop:
                     role = "Курьер"
                     name = "Alexkrut56"
                     rang = "Мифик"
-                elif role == "Предприниматель"  or name == "Георгий Александрович":
+                elif role == "Предприниматель" or name == "Георгий Александрович":
                     role = "Предприниматель"
                     name = "Георгий Александрович"
                     rang = "Эпик"
+
                 print(f"{role} - {name} - {rang}")
-                
+
+                # Рассчитываем бонус
                 persent = 0
-                
-                if rang == "Обычный":
-                    persent = 0
-                elif rang == "Эпик":
+                if rang == "Эпик":
                     persent = 5
                 elif rang == "Мифик":
                     persent = 15
                 elif rang == "Лега":
                     persent = 30
 
-                print(f"Купил: {product} за {product_data['our_price']} рублей +{persent}%\n")
-                self.balance += product_data['our_price'] 
-                time.sleep(3)
+                if product_data['quantity'] > 0:
+                    product_data['quantity'] -= 1
+                    bonus = product_data['our_price'] * persent // 100
+                    income = product_data['our_price'] + bonus
+                    self.balance += income
+                    print(f"Купил: {product} за {product_data['our_price']} ₽ +{persent}% (итого {income})\n")
+                    self.save()
+                else:
+                    print(f"{product} закончился\n")
 
-            # else:
-            #     print("error")
+            time.sleep(3)
 
     def show_menu(self):
         print("═" * 30)
